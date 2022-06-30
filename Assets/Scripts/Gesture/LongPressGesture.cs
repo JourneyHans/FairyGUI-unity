@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,7 +7,7 @@ namespace FairyGUI
     /// <summary>
     /// 长按手势。当按下一定时间后(duration)，派发onAction，如果once为false，则间隔duration时间持续派发onAction，直到手指释放。
     /// </summary>
-    public class LongPressGesture : EventDispatcher
+    public partial class LongPressGesture : EventDispatcher
     {
         /// <summary>
         /// 
@@ -121,25 +121,25 @@ namespace FairyGUI
             context.CaptureTouch();
         }
 
-        void __timer(object param)
-        {
-            Vector2 pt = host.GlobalToLocal(Stage.inst.GetTouchPosition(_touchId));
-            if (Mathf.Pow(pt.x - _startPoint.x, 2) + Mathf.Pow(pt.y - _startPoint.y, 2) > Mathf.Pow(holdRangeRadius, 2))
-            {
-                Timers.inst.Remove(__timer);
-                return;
-            }
-            if (!_started)
-            {
-                _started = true;
-                onBegin.Call();
-
-                if (!once)
-                    Timers.inst.Add(interval, 0, __timer);
-            }
-
-            onAction.Call();
-        }
+        // void __timer(object param)
+        // {
+        //     Vector2 pt = host.GlobalToLocal(Stage.inst.GetTouchPosition(_touchId));
+        //     if (Mathf.Pow(pt.x - _startPoint.x, 2) + Mathf.Pow(pt.y - _startPoint.y, 2) > Mathf.Pow(holdRangeRadius, 2))
+        //     {
+        //         Timers.inst.Remove(__timer);
+        //         return;
+        //     }
+        //     if (!_started)
+        //     {
+        //         _started = true;
+        //         onBegin.Call();
+        //
+        //         if (!once)
+        //             Timers.inst.Add(interval, 0, __timer);
+        //     }
+        //
+        //     onAction.Call();
+        // }
 
         void __touchEnd(EventContext context)
         {

@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using UnityEngine;
 using FairyGUI.Utils;
 
 namespace FairyGUI
 {
-    public class GObject : EventDispatcher
+    public partial class GObject : EventDispatcher
     {
         /// <summary>
         /// GObject的id，仅作为内部使用。与name不同，id值是不会相同的。
@@ -1415,23 +1415,23 @@ namespace FairyGUI
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        virtual public string text
-        {
-            get { return null; }
-            set { /*override in child*/}
-        }
+        // /// <summary>
+        // /// 
+        // /// </summary>
+        // virtual public string text
+        // {
+        //     get { return null; }
+        //     set { /*override in child*/}
+        // }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        virtual public string icon
-        {
-            get { return null; }
-            set { /*override in child*/}
-        }
+        // /// <summary>
+        // /// 
+        // /// </summary>
+        // virtual public string icon
+        // {
+        //     get { return null; }
+        //     set { /*override in child*/}
+        // }
 
         /// <summary>
         /// 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -9,7 +9,7 @@ namespace FairyGUI
     /// <summary>
     /// 
     /// </summary>
-    public class TextField : DisplayObject, IMeshFactory
+    public partial class TextField : DisplayObject, IMeshFactory
     {
         VertAlignType _verticalAlign;
         TextFormat _textFormat;
@@ -710,224 +710,224 @@ namespace FairyGUI
             }
         }
 
-        void BuildLines2()
-        {
-            float letterSpacing = _textFormat.letterSpacing * _fontSizeScale;
-            float lineSpacing = (_textFormat.lineSpacing - 1) * _fontSizeScale;
-            float rectWidth = _contentRect.width - GUTTER_X * 2;
-            float rectHeight = _contentRect.height > 0 ? Mathf.Max(_contentRect.height, _font.GetLineHeight(_textFormat.size)) : 0;
-            float glyphWidth = 0, glyphHeight = 0, baseline = 0;
-            short wordLen = 0;
-            bool wordPossible = false;
-            float posx = 0;
-            bool checkEdge = _autoSize == AutoSizeType.Ellipsis;
-
-            TextFormat format = _textFormat;
-            _font.SetFormat(format, _fontSizeScale);
-            bool wrap = _wordWrap && !_singleLine;
-            if (_maxWidth > 0)
-            {
-                wrap = true;
-                rectWidth = _maxWidth - GUTTER_X * 2;
-            }
-            _textWidth = _textHeight = 0;
-
-            RequestText();
-
-            int elementCount = _elements.Count;
-            int elementIndex = 0;
-            HtmlElement element = null;
-            if (elementCount > 0)
-                element = _elements[elementIndex];
-            int textLength = _parsedText.Length;
-
-            LineInfo line = LineInfo.Borrow();
-            _lines.Add(line);
-            line.y = line.y2 = GUTTER_Y;
-            sLineChars.Clear();
-
-            for (int charIndex = 0; charIndex < textLength; charIndex++)
-            {
-                char ch = _parsedText[charIndex];
-
-                glyphWidth = glyphHeight = baseline = 0;
-
-                while (element != null && element.charIndex == charIndex)
-                {
-                    if (element.type == HtmlElementType.Text)
-                    {
-                        format = element.format;
-                        _font.SetFormat(format, _fontSizeScale);
-                    }
-                    else
-                    {
-                        IHtmlObject htmlObject = element.htmlObject;
-                        if (_richTextField != null && htmlObject == null)
-                        {
-                            element.space = (int)(rectWidth - line.width - 4);
-                            htmlObject = _richTextField.htmlPageContext.CreateObject(_richTextField, element);
-                            element.htmlObject = htmlObject;
-                        }
-                        if (htmlObject != null)
-                        {
-                            glyphWidth = htmlObject.width + 2;
-                            glyphHeight = htmlObject.height;
-                            baseline = glyphHeight * IMAGE_BASELINE;
-                        }
-
-                        if (element.isEntity)
-                            ch = '\0'; //indicate it is a place holder
-                    }
-
-                    elementIndex++;
-                    if (elementIndex < elementCount)
-                        element = _elements[elementIndex];
-                    else
-                        element = null;
-                }
-
-                if (ch == '\0' || ch == '\n')
-                {
-                    wordPossible = false;
-                }
-                else if (_font.GetGlyph(ch == '\t' ? ' ' : ch, out glyphWidth, out glyphHeight, out baseline))
-                {
-                    if (ch == '\t')
-                        glyphWidth *= 4;
-
-                    if (wordPossible)
-                    {
-                        if (char.IsWhiteSpace(ch))
-                        {
-                            wordLen = 0;
-                        }
-                        else if (ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z'
-                            || ch >= '0' && ch <= '9'
-                            || ch == '.' || ch == '"' || ch == '\''
-                            || format.specialStyle == TextFormat.SpecialStyle.Subscript
-                            || format.specialStyle == TextFormat.SpecialStyle.Superscript
-                            || _textDirection != RTLSupport.DirectionType.UNKNOW && RTLSupport.IsArabicLetter(ch))
-                        {
-                            wordLen++;
-                        }
-                        else
-                            wordPossible = false;
-                    }
-                    else if (char.IsWhiteSpace(ch))
-                    {
-                        wordLen = 0;
-                        wordPossible = true;
-                    }
-                    else if (format.specialStyle == TextFormat.SpecialStyle.Subscript
-                        || format.specialStyle == TextFormat.SpecialStyle.Superscript)
-                    {
-                        if (sLineChars.Count > 0)
-                        {
-                            wordLen = 2; //避免上标和下标折到下一行
-                            wordPossible = true;
-                        }
-                    }
-                    else
-                        wordPossible = false;
-                }
-                else
-                    wordPossible = false;
-
-                sLineChars.Add(new LineCharInfo() { width = glyphWidth, height = glyphHeight, baseline = baseline });
-                if (glyphWidth != 0)
-                {
-                    if (posx != 0)
-                        posx += letterSpacing;
-                    posx += glyphWidth;
-                }
-
-                if (ch == '\n' && !_singleLine)
-                {
-                    UpdateLineInfo(line, letterSpacing, sLineChars.Count);
-
-                    LineInfo newLine = LineInfo.Borrow();
-                    _lines.Add(newLine);
-                    newLine.y = line.y + (line.height + lineSpacing);
-                    if (newLine.y < GUTTER_Y) //lineSpacing maybe negative
-                        newLine.y = GUTTER_Y;
-                    newLine.y2 = newLine.y;
-                    newLine.charIndex = line.charIndex + line.charCount;
-
-                    if (checkEdge && line.y + line.height < rectHeight)
-                        _ellipsisCharIndex = line.charIndex + Math.Max(0, line.charCount - ELLIPSIS_LENGTH);
-
-                    sLineChars.Clear();
-                    wordPossible = false;
-                    posx = 0;
-                    line = newLine;
-                }
-                else if (posx > rectWidth)
-                {
-                    if (wrap)
-                    {
-                        int lineCharCount = sLineChars.Count;
-                        int toMoveChars;
-
-                        if (wordPossible && wordLen < 20 && lineCharCount > 2) //if word had broken, move word to new line
-                        {
-                            toMoveChars = wordLen;
-                            //we caculate the line width WITHOUT the tailing space
-                            UpdateLineInfo(line, letterSpacing, lineCharCount - (toMoveChars + 1));
-                            line.charCount++; //but keep it in this line.
-                        }
-                        else
-                        {
-                            toMoveChars = lineCharCount > 1 ? 1 : 0; //if only one char here, we cant move it to new line
-                            UpdateLineInfo(line, letterSpacing, lineCharCount - toMoveChars);
-                        }
-
-                        LineInfo newLine = LineInfo.Borrow();
-                        _lines.Add(newLine);
-                        newLine.y = line.y + (line.height + lineSpacing);
-                        if (newLine.y < GUTTER_Y)
-                            newLine.y = GUTTER_Y;
-                        newLine.y2 = newLine.y;
-                        newLine.charIndex = line.charIndex + line.charCount;
-
-                        posx = 0;
-                        if (toMoveChars != 0)
-                        {
-                            for (int i = line.charCount; i < lineCharCount; i++)
-                            {
-                                LineCharInfo ci = sLineChars[i];
-                                if (posx != 0)
-                                    posx += letterSpacing;
-                                posx += ci.width;
-                            }
-
-                            sLineChars.RemoveRange(0, line.charCount);
-                        }
-                        else
-                            sLineChars.Clear();
-
-                        if (checkEdge && line.y + line.height < rectHeight)
-                            _ellipsisCharIndex = line.charIndex + Math.Max(0, line.charCount - ELLIPSIS_LENGTH);
-
-                        wordPossible = false;
-                        line = newLine;
-                    }
-                    else if (checkEdge && _ellipsisCharIndex == -1)
-                        _ellipsisCharIndex = line.charIndex + Math.Max(0, line.charCount - ELLIPSIS_LENGTH);
-                }
-            }
-
-            UpdateLineInfo(line, letterSpacing, sLineChars.Count);
-
-            if (_textWidth > 0)
-                _textWidth += GUTTER_X * 2;
-            _textHeight = line.y + line.height + GUTTER_Y;
-
-            if (checkEdge && _textWidth <= _contentRect.width && _textHeight <= _contentRect.height + GUTTER_Y)
-                _ellipsisCharIndex = -1;
-
-            _textWidth = Mathf.RoundToInt(_textWidth);
-            _textHeight = Mathf.RoundToInt(_textHeight);
-        }
+        // void BuildLines2()
+        // {
+        //     float letterSpacing = _textFormat.letterSpacing * _fontSizeScale;
+        //     float lineSpacing = (_textFormat.lineSpacing - 1) * _fontSizeScale;
+        //     float rectWidth = _contentRect.width - GUTTER_X * 2;
+        //     float rectHeight = _contentRect.height > 0 ? Mathf.Max(_contentRect.height, _font.GetLineHeight(_textFormat.size)) : 0;
+        //     float glyphWidth = 0, glyphHeight = 0, baseline = 0;
+        //     short wordLen = 0;
+        //     bool wordPossible = false;
+        //     float posx = 0;
+        //     bool checkEdge = _autoSize == AutoSizeType.Ellipsis;
+        //
+        //     TextFormat format = _textFormat;
+        //     _font.SetFormat(format, _fontSizeScale);
+        //     bool wrap = _wordWrap && !_singleLine;
+        //     if (_maxWidth > 0)
+        //     {
+        //         wrap = true;
+        //         rectWidth = _maxWidth - GUTTER_X * 2;
+        //     }
+        //     _textWidth = _textHeight = 0;
+        //
+        //     RequestText();
+        //
+        //     int elementCount = _elements.Count;
+        //     int elementIndex = 0;
+        //     HtmlElement element = null;
+        //     if (elementCount > 0)
+        //         element = _elements[elementIndex];
+        //     int textLength = _parsedText.Length;
+        //
+        //     LineInfo line = LineInfo.Borrow();
+        //     _lines.Add(line);
+        //     line.y = line.y2 = GUTTER_Y;
+        //     sLineChars.Clear();
+        //
+        //     for (int charIndex = 0; charIndex < textLength; charIndex++)
+        //     {
+        //         char ch = _parsedText[charIndex];
+        //
+        //         glyphWidth = glyphHeight = baseline = 0;
+        //
+        //         while (element != null && element.charIndex == charIndex)
+        //         {
+        //             if (element.type == HtmlElementType.Text)
+        //             {
+        //                 format = element.format;
+        //                 _font.SetFormat(format, _fontSizeScale);
+        //             }
+        //             else
+        //             {
+        //                 IHtmlObject htmlObject = element.htmlObject;
+        //                 if (_richTextField != null && htmlObject == null)
+        //                 {
+        //                     element.space = (int)(rectWidth - line.width - 4);
+        //                     htmlObject = _richTextField.htmlPageContext.CreateObject(_richTextField, element);
+        //                     element.htmlObject = htmlObject;
+        //                 }
+        //                 if (htmlObject != null)
+        //                 {
+        //                     glyphWidth = htmlObject.width + 2;
+        //                     glyphHeight = htmlObject.height;
+        //                     baseline = glyphHeight * IMAGE_BASELINE;
+        //                 }
+        //
+        //                 if (element.isEntity)
+        //                     ch = '\0'; //indicate it is a place holder
+        //             }
+        //
+        //             elementIndex++;
+        //             if (elementIndex < elementCount)
+        //                 element = _elements[elementIndex];
+        //             else
+        //                 element = null;
+        //         }
+        //
+        //         if (ch == '\0' || ch == '\n')
+        //         {
+        //             wordPossible = false;
+        //         }
+        //         else if (_font.GetGlyph(ch == '\t' ? ' ' : ch, out glyphWidth, out glyphHeight, out baseline))
+        //         {
+        //             if (ch == '\t')
+        //                 glyphWidth *= 4;
+        //
+        //             if (wordPossible)
+        //             {
+        //                 if (char.IsWhiteSpace(ch))
+        //                 {
+        //                     wordLen = 0;
+        //                 }
+        //                 else if (ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z'
+        //                     || ch >= '0' && ch <= '9'
+        //                     || ch == '.' || ch == '"' || ch == '\''
+        //                     || format.specialStyle == TextFormat.SpecialStyle.Subscript
+        //                     || format.specialStyle == TextFormat.SpecialStyle.Superscript
+        //                     || _textDirection != RTLSupport.DirectionType.UNKNOW && RTLSupport.IsArabicLetter(ch))
+        //                 {
+        //                     wordLen++;
+        //                 }
+        //                 else
+        //                     wordPossible = false;
+        //             }
+        //             else if (char.IsWhiteSpace(ch))
+        //             {
+        //                 wordLen = 0;
+        //                 wordPossible = true;
+        //             }
+        //             else if (format.specialStyle == TextFormat.SpecialStyle.Subscript
+        //                 || format.specialStyle == TextFormat.SpecialStyle.Superscript)
+        //             {
+        //                 if (sLineChars.Count > 0)
+        //                 {
+        //                     wordLen = 2; //避免上标和下标折到下一行
+        //                     wordPossible = true;
+        //                 }
+        //             }
+        //             else
+        //                 wordPossible = false;
+        //         }
+        //         else
+        //             wordPossible = false;
+        //
+        //         sLineChars.Add(new LineCharInfo() { width = glyphWidth, height = glyphHeight, baseline = baseline });
+        //         if (glyphWidth != 0)
+        //         {
+        //             if (posx != 0)
+        //                 posx += letterSpacing;
+        //             posx += glyphWidth;
+        //         }
+        //
+        //         if (ch == '\n' && !_singleLine)
+        //         {
+        //             UpdateLineInfo(line, letterSpacing, sLineChars.Count);
+        //
+        //             LineInfo newLine = LineInfo.Borrow();
+        //             _lines.Add(newLine);
+        //             newLine.y = line.y + (line.height + lineSpacing);
+        //             if (newLine.y < GUTTER_Y) //lineSpacing maybe negative
+        //                 newLine.y = GUTTER_Y;
+        //             newLine.y2 = newLine.y;
+        //             newLine.charIndex = line.charIndex + line.charCount;
+        //
+        //             if (checkEdge && line.y + line.height < rectHeight)
+        //                 _ellipsisCharIndex = line.charIndex + Math.Max(0, line.charCount - ELLIPSIS_LENGTH);
+        //
+        //             sLineChars.Clear();
+        //             wordPossible = false;
+        //             posx = 0;
+        //             line = newLine;
+        //         }
+        //         else if (posx > rectWidth)
+        //         {
+        //             if (wrap)
+        //             {
+        //                 int lineCharCount = sLineChars.Count;
+        //                 int toMoveChars;
+        //
+        //                 if (wordPossible && wordLen < 20 && lineCharCount > 2) //if word had broken, move word to new line
+        //                 {
+        //                     toMoveChars = wordLen;
+        //                     //we caculate the line width WITHOUT the tailing space
+        //                     UpdateLineInfo(line, letterSpacing, lineCharCount - (toMoveChars + 1));
+        //                     line.charCount++; //but keep it in this line.
+        //                 }
+        //                 else
+        //                 {
+        //                     toMoveChars = lineCharCount > 1 ? 1 : 0; //if only one char here, we cant move it to new line
+        //                     UpdateLineInfo(line, letterSpacing, lineCharCount - toMoveChars);
+        //                 }
+        //
+        //                 LineInfo newLine = LineInfo.Borrow();
+        //                 _lines.Add(newLine);
+        //                 newLine.y = line.y + (line.height + lineSpacing);
+        //                 if (newLine.y < GUTTER_Y)
+        //                     newLine.y = GUTTER_Y;
+        //                 newLine.y2 = newLine.y;
+        //                 newLine.charIndex = line.charIndex + line.charCount;
+        //
+        //                 posx = 0;
+        //                 if (toMoveChars != 0)
+        //                 {
+        //                     for (int i = line.charCount; i < lineCharCount; i++)
+        //                     {
+        //                         LineCharInfo ci = sLineChars[i];
+        //                         if (posx != 0)
+        //                             posx += letterSpacing;
+        //                         posx += ci.width;
+        //                     }
+        //
+        //                     sLineChars.RemoveRange(0, line.charCount);
+        //                 }
+        //                 else
+        //                     sLineChars.Clear();
+        //
+        //                 if (checkEdge && line.y + line.height < rectHeight)
+        //                     _ellipsisCharIndex = line.charIndex + Math.Max(0, line.charCount - ELLIPSIS_LENGTH);
+        //
+        //                 wordPossible = false;
+        //                 line = newLine;
+        //             }
+        //             else if (checkEdge && _ellipsisCharIndex == -1)
+        //                 _ellipsisCharIndex = line.charIndex + Math.Max(0, line.charCount - ELLIPSIS_LENGTH);
+        //         }
+        //     }
+        //
+        //     UpdateLineInfo(line, letterSpacing, sLineChars.Count);
+        //
+        //     if (_textWidth > 0)
+        //         _textWidth += GUTTER_X * 2;
+        //     _textHeight = line.y + line.height + GUTTER_Y;
+        //
+        //     if (checkEdge && _textWidth <= _contentRect.width && _textHeight <= _contentRect.height + GUTTER_Y)
+        //         _ellipsisCharIndex = -1;
+        //
+        //     _textWidth = Mathf.RoundToInt(_textWidth);
+        //     _textHeight = Mathf.RoundToInt(_textHeight);
+        // }
 
         void UpdateLineInfo(LineInfo line, float letterSpacing, int cnt)
         {

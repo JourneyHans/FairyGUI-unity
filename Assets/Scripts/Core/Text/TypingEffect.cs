@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,7 +7,7 @@ namespace FairyGUI
     /// <summary>
     /// 文字打字效果。先调用Start，然后Print。
     /// </summary>
-    public class TypingEffect
+    public partial class TypingEffect
     {
         protected TextField _textField;
         protected Vector3[] _backupVerts;

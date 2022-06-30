@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -12,7 +12,7 @@ namespace FairyGUI
     /// <summary>
     /// A UI Package contains a description file and some texture, sound assets.
     /// </summary>
-    public class UIPackage
+    public partial class UIPackage
     {
         /// <summary>
         /// Unload UIAssetBundle by FairyGUI system.
@@ -273,26 +273,26 @@ namespace FairyGUI
             return pkg;
         }
 
-        /// <summary>
-        /// Add a UI package from a path relative to Unity Resources path.
-        /// </summary>
-        /// <param name="descFilePath">Path relative to Unity Resources path.</param>
-        /// <returns>UIPackage</returns>
-        public static UIPackage AddPackage(string descFilePath)
-        {
-            if (descFilePath.StartsWith("Assets/"))
-            {
-#if UNITY_EDITOR
-                return AddPackage(descFilePath, _loadFromAssetsPath);
-#else
-
-                Debug.LogWarning("FairyGUI: failed to load package in '" + descFilePath + "'");
-                return null;
-#endif
-            }
-            else
-                return AddPackage(descFilePath, _loadFromResourcesPath);
-        }
+//         /// <summary>
+//         /// Add a UI package from a path relative to Unity Resources path.
+//         /// </summary>
+//         /// <param name="descFilePath">Path relative to Unity Resources path.</param>
+//         /// <returns>UIPackage</returns>
+//         public static UIPackage AddPackage(string descFilePath)
+//         {
+//             if (descFilePath.StartsWith("Assets/"))
+//             {
+// #if UNITY_EDITOR
+//                 return AddPackage(descFilePath, _loadFromAssetsPath);
+// #else
+//
+//                 Debug.LogWarning("FairyGUI: failed to load package in '" + descFilePath + "'");
+//                 return null;
+// #endif
+//             }
+//             else
+//                 return AddPackage(descFilePath, _loadFromResourcesPath);
+//         }
 
         /// <summary>
         /// 使用自定义的加载方式载入一个包。
@@ -1261,82 +1261,82 @@ namespace FairyGUI
             }
         }
 
-        void LoadAtlas(PackageItem item)
-        {
-            string ext = Path.GetExtension(item.file);
-            string fileName = item.file.Substring(0, item.file.Length - ext.Length);
-
-            if (_loadAsyncFunc != null)
-            {
-                _loadAsyncFunc(fileName, ext, typeof(Texture), item);
-                if (item.texture == null)
-                    item.texture = new NTexture(null, new Rect(0, 0, item.width, item.height));
-                item.texture.destroyMethod = DestroyMethod.None;
-            }
-            else
-            {
-                Texture tex = null;
-                Texture alphaTex = null;
-                DestroyMethod dm;
-
-                if (_fromBundle)
-                {
-                    if (_resBundle != null)
-                        tex = _resBundle.LoadAsset<Texture>(fileName);
-                    else
-                        Debug.LogWarning("FairyGUI: bundle already unloaded.");
-
-                    dm = DestroyMethod.None;
-                }
-                else
-                    tex = (Texture)_loadFunc(fileName, ext, typeof(Texture), out dm);
-
-                if (tex == null)
-                    Debug.LogWarning("FairyGUI: texture '" + item.file + "' not found in " + this.name);
-
-                else if (!(tex is Texture2D))
-                {
-                    Debug.LogWarning("FairyGUI: settings for '" + item.file + "' is wrong! Correct values are: (Texture Type=Default, Texture Shape=2D)");
-                    tex = null;
-                }
-                else
-                {
-                    if (((Texture2D)tex).mipmapCount > 1)
-                        Debug.LogWarning("FairyGUI: settings for '" + item.file + "' is wrong! Correct values are: (Generate Mip Maps=unchecked)");
-                }
-
-                if (tex != null)
-                {
-                    fileName = fileName + "!a";
-                    if (_fromBundle)
-                    {
-                        if (_resBundle != null)
-                            alphaTex = _resBundle.LoadAsset<Texture2D>(fileName);
-                    }
-                    else
-                        alphaTex = (Texture2D)_loadFunc(fileName, ext, typeof(Texture2D), out dm);
-                }
-
-                if (tex == null)
-                {
-                    tex = NTexture.CreateEmptyTexture();
-                    dm = DestroyMethod.Destroy;
-                }
-
-                if (item.texture == null)
-                {
-                    item.texture = new NTexture(tex, alphaTex, (float)tex.width / item.width, (float)tex.height / item.height);
-                    item.texture.onRelease += (NTexture t) =>
-                    {
-                        if (onReleaseResource != null)
-                            onReleaseResource(item);
-                    };
-                }
-                else
-                    item.texture.Reload(tex, alphaTex);
-                item.texture.destroyMethod = dm;
-            }
-        }
+        // void LoadAtlas(PackageItem item)
+        // {
+        //     string ext = Path.GetExtension(item.file);
+        //     string fileName = item.file.Substring(0, item.file.Length - ext.Length);
+        //
+        //     if (_loadAsyncFunc != null)
+        //     {
+        //         _loadAsyncFunc(fileName, ext, typeof(Texture), item);
+        //         if (item.texture == null)
+        //             item.texture = new NTexture(null, new Rect(0, 0, item.width, item.height));
+        //         item.texture.destroyMethod = DestroyMethod.None;
+        //     }
+        //     else
+        //     {
+        //         Texture tex = null;
+        //         Texture alphaTex = null;
+        //         DestroyMethod dm;
+        //
+        //         if (_fromBundle)
+        //         {
+        //             if (_resBundle != null)
+        //                 tex = _resBundle.LoadAsset<Texture>(fileName);
+        //             else
+        //                 Debug.LogWarning("FairyGUI: bundle already unloaded.");
+        //
+        //             dm = DestroyMethod.None;
+        //         }
+        //         else
+        //             tex = (Texture)_loadFunc(fileName, ext, typeof(Texture), out dm);
+        //
+        //         if (tex == null)
+        //             Debug.LogWarning("FairyGUI: texture '" + item.file + "' not found in " + this.name);
+        //
+        //         else if (!(tex is Texture2D))
+        //         {
+        //             Debug.LogWarning("FairyGUI: settings for '" + item.file + "' is wrong! Correct values are: (Texture Type=Default, Texture Shape=2D)");
+        //             tex = null;
+        //         }
+        //         else
+        //         {
+        //             if (((Texture2D)tex).mipmapCount > 1)
+        //                 Debug.LogWarning("FairyGUI: settings for '" + item.file + "' is wrong! Correct values are: (Generate Mip Maps=unchecked)");
+        //         }
+        //
+        //         if (tex != null)
+        //         {
+        //             fileName = fileName + "!a";
+        //             if (_fromBundle)
+        //             {
+        //                 if (_resBundle != null)
+        //                     alphaTex = _resBundle.LoadAsset<Texture2D>(fileName);
+        //             }
+        //             else
+        //                 alphaTex = (Texture2D)_loadFunc(fileName, ext, typeof(Texture2D), out dm);
+        //         }
+        //
+        //         if (tex == null)
+        //         {
+        //             tex = NTexture.CreateEmptyTexture();
+        //             dm = DestroyMethod.Destroy;
+        //         }
+        //
+        //         if (item.texture == null)
+        //         {
+        //             item.texture = new NTexture(tex, alphaTex, (float)tex.width / item.width, (float)tex.height / item.height);
+        //             item.texture.onRelease += (NTexture t) =>
+        //             {
+        //                 if (onReleaseResource != null)
+        //                     onReleaseResource(item);
+        //             };
+        //         }
+        //         else
+        //             item.texture.Reload(tex, alphaTex);
+        //         item.texture.destroyMethod = dm;
+        //     }
+        // }
 
         void LoadImage(PackageItem item)
         {

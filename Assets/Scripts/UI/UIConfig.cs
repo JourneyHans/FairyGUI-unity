@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,7 +8,7 @@ namespace FairyGUI
     /// Global configs. These options should be set before any UI construction.
     /// </summary>
     [AddComponentMenu("FairyGUI/UI Config")]
-    public class UIConfig : MonoBehaviour
+    public partial class UIConfig : MonoBehaviour
     {
         /// <summary>
         /// Dynamic Font Support. 

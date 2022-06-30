@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using FairyGUI.Utils;
 using UnityEngine;
@@ -22,7 +22,7 @@ namespace FairyGUI
     /// <summary>
     /// GList class.
     /// </summary>
-    public class GList : GComponent
+    public partial class GList : GComponent
     {
         /// <summary>
         /// 如果true，当item不可见时自动折叠，否则依然占位
@@ -1500,82 +1500,82 @@ namespace FairyGUI
             }
         }
 
-        /// <summary>
-        /// Set the list item count. 
-        /// If the list is not virtual, specified number of items will be created. 
-        /// If the list is virtual, only items in view will be created.
-        /// </summary>
-        public int numItems
-        {
-            get
-            {
-                if (_virtual)
-                    return _numItems;
-                else
-                    return _children.Count;
-            }
-            set
-            {
-                if (_virtual)
-                {
-                    if (itemRenderer == null)
-                        throw new Exception("FairyGUI: Set itemRenderer first!");
-
-                    _numItems = value;
-                    if (_loop)
-                        _realNumItems = _numItems * 6;//设置6倍数量，用于循环滚动
-                    else
-                        _realNumItems = _numItems;
-
-                    //_virtualItems的设计是只增不减的
-                    int oldCount = _virtualItems.Count;
-                    if (_realNumItems > oldCount)
-                    {
-                        for (int i = oldCount; i < _realNumItems; i++)
-                        {
-                            ItemInfo ii = new ItemInfo();
-                            ii.size = _itemSize;
-
-                            _virtualItems.Add(ii);
-                        }
-                    }
-                    else
-                    {
-                        for (int i = _realNumItems; i < oldCount; i++)
-                            _virtualItems[i].selected = false;
-                    }
-
-                    if (_virtualListChanged != 0)
-                        Timers.inst.Remove(this.RefreshVirtualList);
-                    //立即刷新
-                    this.RefreshVirtualList(null);
-                }
-                else
-                {
-                    int cnt = _children.Count;
-                    if (value > cnt)
-                    {
-                        for (int i = cnt; i < value; i++)
-                        {
-                            if (itemProvider == null)
-                                AddItemFromPool();
-                            else
-                                AddItemFromPool(itemProvider(i));
-                        }
-                    }
-                    else
-                    {
-                        RemoveChildrenToPool(value, cnt);
-                    }
-
-                    if (itemRenderer != null)
-                    {
-                        for (int i = 0; i < value; i++)
-                            itemRenderer(i, GetChildAt(i));
-                    }
-                }
-            }
-        }
+        // /// <summary>
+        // /// Set the list item count. 
+        // /// If the list is not virtual, specified number of items will be created. 
+        // /// If the list is virtual, only items in view will be created.
+        // /// </summary>
+        // public int numItems
+        // {
+        //     get
+        //     {
+        //         if (_virtual)
+        //             return _numItems;
+        //         else
+        //             return _children.Count;
+        //     }
+        //     set
+        //     {
+        //         if (_virtual)
+        //         {
+        //             if (itemRenderer == null)
+        //                 throw new Exception("FairyGUI: Set itemRenderer first!");
+        //
+        //             _numItems = value;
+        //             if (_loop)
+        //                 _realNumItems = _numItems * 6;//设置6倍数量，用于循环滚动
+        //             else
+        //                 _realNumItems = _numItems;
+        //
+        //             //_virtualItems的设计是只增不减的
+        //             int oldCount = _virtualItems.Count;
+        //             if (_realNumItems > oldCount)
+        //             {
+        //                 for (int i = oldCount; i < _realNumItems; i++)
+        //                 {
+        //                     ItemInfo ii = new ItemInfo();
+        //                     ii.size = _itemSize;
+        //
+        //                     _virtualItems.Add(ii);
+        //                 }
+        //             }
+        //             else
+        //             {
+        //                 for (int i = _realNumItems; i < oldCount; i++)
+        //                     _virtualItems[i].selected = false;
+        //             }
+        //
+        //             if (_virtualListChanged != 0)
+        //                 Timers.inst.Remove(this.RefreshVirtualList);
+        //             //立即刷新
+        //             this.RefreshVirtualList(null);
+        //         }
+        //         else
+        //         {
+        //             int cnt = _children.Count;
+        //             if (value > cnt)
+        //             {
+        //                 for (int i = cnt; i < value; i++)
+        //                 {
+        //                     if (itemProvider == null)
+        //                         AddItemFromPool();
+        //                     else
+        //                         AddItemFromPool(itemProvider(i));
+        //                 }
+        //             }
+        //             else
+        //             {
+        //                 RemoveChildrenToPool(value, cnt);
+        //             }
+        //
+        //             if (itemRenderer != null)
+        //             {
+        //                 for (int i = 0; i < value; i++)
+        //                     itemRenderer(i, GetChildAt(i));
+        //             }
+        //         }
+        //     }
+        // }
 
         public void RefreshVirtualList()
         {
